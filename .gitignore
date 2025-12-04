@@ -1,2 +1,5 @@
 venv**
 .env
+.gitignore
+.DS_Store
+**.pyc

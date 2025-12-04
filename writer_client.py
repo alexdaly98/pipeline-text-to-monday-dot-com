@@ -48,6 +48,7 @@ Identify:
    - End date in YYYY-MM-DD format
 
 If dates are in other formats (e.g., "Oct 29", "10/29/2025"), convert them to YYYY-MM-DD.
+If the year is not specified somewhere assume it's 2025.
 If a task has only one date mentioned, use the same date for both start and end.
 """
         
@@ -139,7 +140,7 @@ If a task has only one date mentioned, use the same date for both start and end.
                     "schema": WRITER_SCHEMA
                 }
             },
-            "temperature": 0.1  # Low temperature for consistent extraction
+            "temperature": 0  # Low temperature for consistent extraction
         }
         
         logger.info("Calling Writer API...")
