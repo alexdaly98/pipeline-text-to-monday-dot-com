@@ -235,7 +235,6 @@ def main():
         # -------------------------
         with st.spinner(
             "Phase 2 – Creating your Monday.com board and pushing timeline items...\n"
-            "(You can still review the extracted structure above while this runs.)"
         ):
             try:
                 board_id, group_ids = monday_client.create_board_from_data(
