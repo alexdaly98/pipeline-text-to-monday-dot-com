@@ -1,65 +1,91 @@
-import tempfile
 from pathlib import Path
-import streamlit as st
-import traceback
+import tempfile
 
-from pipeline import TimelinePipeline
+import streamlit as st
+
+from config import Config
+from writer_client import WriterClient
+from monday_client import MondayClient
+from models import BoardData
 
 
 @st.cache_resource
-def get_pipeline() -> TimelinePipeline:
+def get_clients() -> tuple[WriterClient, MondayClient]:
     """
-    Create a single TimelinePipeline instance per Streamlit session.
+    Initialize and cache Writer + Monday clients for the Streamlit session.
 
-    This ensures:
-    - Config.validate() is called once
-    - WriterClient and MondayClient are reused
+    Config.validate() is called once here.
     """
-    return TimelinePipeline()
+    Config.validate()
+    writer_client = WriterClient()
+    monday_client = MondayClient()
+    return writer_client, monday_client
 
 
-def run_from_csv_file(pipeline: TimelinePipeline, uploaded_file, board_name: str):
-    """Save uploaded CSV to temp file and run pipeline.from_csv."""
+def normalize_list_of_objects(objs):
+    """Convert list of dataclass/objects/dicts into list of dicts for display."""
+    if not objs:
+        return []
+
+    if isinstance(objs[0], dict):
+        return objs
+
+    try:
+        from dataclasses import is_dataclass, asdict
+
+        if is_dataclass(objs[0]):
+            return [asdict(o) for o in objs]
+    except Exception:
+        pass
+
+    # Fallback: use __dict__
+    normalized = []
+    for o in objs:
+        if hasattr(o, "__dict__"):
+            normalized.append({k: v for k, v in o.__dict__.items() if not k.startswith("_")})
+        else:
+            normalized.append({"value": str(o)})
+    return normalized
+
+
+def extract_board_data_from_csv(writer_client: WriterClient, uploaded_file) -> BoardData:
+    """Save uploaded CSV to a temp file, call Writer extraction, then cleanup."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
         tmp.write(uploaded_file.getvalue())
         tmp_path = tmp.name
 
     try:
-        board_id, group_ids = pipeline.run_from_csv(tmp_path, board_name)
+        board_data = writer_client.extract_from_csv(tmp_path)
     finally:
-        # Best-effort cleanup
         try:
             Path(tmp_path).unlink(missing_ok=True)
         except Exception:
             pass
 
-    return board_id, group_ids
+    return board_data
 
 
-def run_from_text_file(pipeline: TimelinePipeline, uploaded_file, board_name: str):
-    """Read uploaded text file and run pipeline.from_text."""
-    # uploaded_file is a BytesIO-like object
+def extract_board_data_from_text_file(writer_client: WriterClient, uploaded_file) -> BoardData:
+    """Read uploaded text file, call Writer extraction."""
     content = uploaded_file.read().decode("utf-8", errors="ignore")
-    board_id, group_ids = pipeline.run_from_text(content, board_name)
-    return board_id, group_ids
+    return writer_client.extract_from_text(content)
 
 
-def run_from_text_input(pipeline: TimelinePipeline, text_input: str, board_name: str):
-    """Run pipeline directly from textarea input."""
-    board_id, group_ids = pipeline.run_from_text(text_input, board_name)
-    return board_id, group_ids
+def extract_board_data_from_text_input(writer_client: WriterClient, text_input: str) -> BoardData:
+    """Call Writer extraction directly from textarea."""
+    return writer_client.extract_from_text(text_input)
 
 
 def main():
     st.set_page_config(
-        page_title="Text → Monday.com Timeline",
+        page_title="Text → Monday.com Timeline (Powered by Writer AI)",
         layout="centered",
     )
 
     st.title("Text → Timeline in Monday.com")
-    st.write(
-        "Give me a **CSV or free-form text** describing a project timeline, "
-        "and I'll use **Writer + Monday.com** to create a timeline board for you."
+    st.markdown(
+        "Turn **plain English project plans** into a structured **timeline board in Monday.com**.\n\n"
+        "**Powered by _Writer AI_ for structured timeline extraction.** 💡"
     )
 
     st.markdown("---")
@@ -105,7 +131,9 @@ def main():
 
     st.markdown("---")
 
-    if st.button("Create Monday.com Board"):
+    run_clicked = st.button("Create Monday.com Timeline Board")
+
+    if run_clicked:
         # Basic validation
         if not board_name.strip():
             st.error("Please enter a board name.")
@@ -119,35 +147,72 @@ def main():
             st.error("Please enter some text describing your project.")
             return
 
-        pipeline = get_pipeline()
+        writer_client, monday_client = get_clients()
 
-        try:
-            with st.spinner("Running pipeline and creating your Monday.com board..."):
+        # -------------------------
+        # PHASE 1 – Writer AI extraction
+        # -------------------------
+        with st.spinner("Phase 1 – Writer AI is extracting a structured timeline from your input..."):
+            try:
                 if input_mode == "CSV file":
-                    board_id, group_ids = run_from_csv_file(
-                        pipeline, uploaded_file, board_name
-                    )
+                    board_data = extract_board_data_from_csv(writer_client, uploaded_file)
                 elif input_mode == "Text file":
-                    board_id, group_ids = run_from_text_file(
-                        pipeline, uploaded_file, board_name
-                    )
+                    board_data = extract_board_data_from_text_file(writer_client, uploaded_file)
                 else:
-                    board_id, group_ids = run_from_text_input(
-                        pipeline, text_input, board_name
-                    )
+                    board_data = extract_board_data_from_text_input(writer_client, text_input)
+            except Exception as e:
+                st.error(f"Writer extraction failed: {e}")
+                return
 
-            # --- Success UI ---
-            st.success("🎉 Board creation completed successfully!")
-            st.markdown(f"**Board ID:** `{board_id}`")
+        st.success("Phase 1 complete – Writer AI successfully extracted the timeline ✅")
 
-            if group_ids:
-                st.markdown("**Groups created (key → Monday group ID):**")
+        # Show extracted groups & items (visible now, and will stay visible during Phase 2)
+        groups = normalize_list_of_objects(getattr(board_data, "groups", []))
+        items = normalize_list_of_objects(getattr(board_data, "items", []))
+
+        st.subheader("Detected groups (from Writer AI)")
+        if groups:
+            st.dataframe(groups, use_container_width=True)
+        else:
+            st.info("No groups detected.")
+
+        st.subheader("Detected items (from Writer AI)")
+        if items:
+            st.dataframe(items, use_container_width=True)
+        else:
+            st.info("No items detected.")
+
+        st.markdown("---")
+
+        # -------------------------
+        # PHASE 2 – Push to Monday.com
+        # -------------------------
+        with st.spinner(
+            "Phase 2 – Creating your Monday.com board and pushing timeline items...\n"
+            "(You can already review the extracted data above while this runs.)"
+        ):
+            try:
+                board_id, group_ids = monday_client.create_board_from_data(
+                    board_name,
+                    board_data
+                )
+            except Exception as e:
+                st.error(f"Failed to create board in Monday.com: {e}")
+                return
+
+        st.success("🎉 Timeline successfully pushed to Monday.com!")
+
+        # Board info + link
+        st.markdown(f"**Board ID:** `{board_id}`")
+
+        # Generic board URL pattern (user may need to select account if they have multiple)
+        board_url = f"https://app.monday.com/boards/{board_id}"
+        st.markdown(f"[Open the board in Monday.com]({board_url})")
+
+        # If you still want to expose group IDs mapping (but not raw logs)
+        if group_ids:
+            with st.expander("Show group mapping (group_key → Monday group ID)"):
                 st.json(group_ids)
-
-        except Exception as e:
-            st.error(f"Pipeline failed: {e}")
-            with st.expander("Show full traceback"):
-                st.code(traceback.format_exc(), language="python")
 
 
 if __name__ == "__main__":
