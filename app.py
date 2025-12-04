@@ -159,7 +159,7 @@ def main():
     # --- Input type selection ---
     input_mode = st.radio(
         "Input type",
-        ["CSV file", "Text file", "Direct text"],
+        ["CSV file", "Text file", "Raw text"],
         index=0,
         horizontal=True,
     )
@@ -177,7 +177,7 @@ def main():
             "Upload a text file (.txt) with a project description",
             type=["txt"],
         )
-    else:  # Direct text
+    else:  # Raw text
         text_input = st.text_area(
             "Paste your project description",
             height=220,
@@ -202,7 +202,7 @@ def main():
             st.error("Please upload a file first.")
             return
 
-        if input_mode == "Direct text" and (not text_input or not text_input.strip()):
+        if input_mode == "Raw text" and (not text_input or not text_input.strip()):
             st.error("Please enter some text describing your project.")
             return
 
