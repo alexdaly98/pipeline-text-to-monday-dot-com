@@ -1,0 +1,11 @@
+group_key,group_name,item_name,start_date,end_date
+overall,Overall Timeline,Kickoff,2025-09-18,2025-09-18
+overall,Overall Timeline,Briefing,2025-10-03,2025-10-03
+overall,Overall Timeline,Internal Review,2025-10-21,2025-10-21
+overall,Overall Timeline,Stakeholder Review Meeting | Rd1,2025-10-29,2025-10-29
+owned,Owned Display Development,Start Creative Production,2025-11-24,2025-11-25
+owned,Owned Display Development,Send Onsite Display Development,2025-11-27,2025-12-04
+paid,Paid Media Development,Creative Production,2025-11-24,2025-12-03
+paid,Paid Media Development,Send Paid Assets to QA,2025-12-04,2025-12-05
+email,Email Development,Creative Production,2025-11-24,2025-12-03
+email,Email Development,Send Emails to Development,2025-12-03,2025-12-05

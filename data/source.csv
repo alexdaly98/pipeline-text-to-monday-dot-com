@@ -1,0 +1,49 @@
+,Timeline | All Assets,,,,,,,,,Launch Dec 15,,,,
+,"INSTRUCTIONS: 
+- Update the yellow cells for your project until you arrive at the desired launch date. 
+
+Notes: 
+- Calculation accounts for weekends, holidays and Global days off from the Holidays tab.
+- Est. Workdays are based on SLAs but can be adjusted. Adjust yellow cells first.",,,,,,,,,,,,,
+Phase,DONE?,TASKS,START DATE,END DATE,Workdays for (formula),EST. DAYS,MILESTONE,ASSIGNEE,,LEGEND,,TIMELINE MILESTONES,,
+,TRUE,Kickoff,"Thu, Sep 18","Thu, Sep 18",0,0,Yes,PM,,Manual input,,,"Thu, Sep 18",| Kickoff
+,FALSE,Briefing,"Fri, Oct 3","Mon, Oct 20",10,11,Yes,PM,,Based on SLAs,,,"Fri, Oct 3",| Briefing
+,FALSE,Internal Review,"Tue, Oct 21","Tue, Oct 28",5,6,Yes,Copywriter,,If checked = Done,,,"Tue, Oct 21",| Internal Review
+,FALSE,Stakeholder Review Meeting | Rd 1,"Wed, Oct 29","Wed, Oct 29",0,1,Yes,Designer,,Stakeholder Reviews,,,"Wed, Oct 29",| Stakeholder Review Meeting | Rd 1
+,FALSE,Stakeholder Feedback Due | Rd 1,"Thu, Oct 30","Thu, Oct 30",0,1,Yes,ACD-Design,,Stakeholder Reviews,,,"Thu, Oct 30",| Stakeholder Feedback Due | Rd 1
+,FALSE,Feedback Review Meeting | Rd 1,"Fri, Oct 31","Fri, Oct 31",0,1,No,Designer,,,,,"Fri, Oct 31",| Feedback Review Meeting | Rd 1
+,FALSE,Copy & Design | Rd 2,"Mon, Nov 3","Fri, Nov 7",4,5,Yes,Designer,,,,,"Mon, Nov 3",| Copy & Design | Rd 2
+,FALSE,Share Creative via Email | Rd 2,"Mon, Nov 10","Mon, Nov 10",0,1,Yes,Marketer,,,,,"Mon, Nov 10",| Share Creative via Email | Rd 2
+,FALSE,Stakeholder Feedback Due | Rd 2,"Wed, Nov 12","Wed, Nov 12",0,1,,,,,,,"Wed, Nov 12",| Stakeholder Feedback Due | Rd 2
+,FALSE,Copy & Design | Rd 3,"Thu, Nov 13","Mon, Nov 17",2,3,No,Copywriter,,,,,"Tue, Nov 18",| Share Creative via Email | Rd 3
+,FALSE,Share Creative via Email | Rd 3,"Tue, Nov 18","Tue, Nov 18",0,1,No,ACD-Copy,,,,,"Fri, Nov 21",| Approval
+,FALSE,Stakeholder Feedback Due | Rd 2,"Wed, Nov 19","Wed, Nov 19",0,1,No,Designer,,,,,"Mon, Nov 24",| Start Creative Production 
+,FALSE,Copy & Design | Rd 3,"Wed, Nov 19","Wed, Nov 19",0,1,No,ACD-Design,,,,,"Wed, Nov 26",| Send Onsite Display Development
+,FALSE,Share Creative via Email | Rd 4,"Thu, Nov 20","Thu, Nov 20",0,1,No,Designer,,,,,"Thu, Dec 4",| Send Paid Assets to QA
+,FALSE,Approval,"Fri, Nov 21","Fri, Nov 21",0,1,Yes,Designer,,,,,"Wed, Dec 3",| Send Emails to Development
+,Owned Display Development,,,,,,Yes,Marketer,,,,,"Mon, Dec 8",| Release Paid Assets to Kepler
+Owned Display Development,FALSE,Start Creative Production ,"Mon, Nov 24","Tue, Nov 25",1,2,No,Copywriter,,,,,"Mon, Dec 15",| Launch
+Owned Display Development,FALSE,Send Onsite Display Development,"Wed, Nov 26","Thu, Dec 4",4,5,No,ACD-Copy,,,,,,
+Owned Display Development,FALSE,Development Review,"Fri, Dec 5","Fri, Dec 5",0,1,No,ACD-Design,,,,,,
+Owned Display Development,FALSE,QA Verification,"Mon, Dec 8","Tue, Dec 9",1,2,No,Designer,,,,,,
+Owned Display Development,FALSE,Trafficking,"Wed, Dec 10","Fri, Dec 12",2,3,No,Designer,,,,,,
+Owned Display Development,FALSE,Launch,"Mon, Dec 15","Mon, Dec 15",0,1,Yes,Marketer,,,,,,
+,Paid Media Development,,,,,,Yes,Marketer,,,,,,
+Paid Media Development,FALSE,Creative Production,"Mon, Nov 24","Wed, Dec 3",5,6,,,,,,,,
+Paid Media Development,FALSE,Send Paid Assets to QA,"Thu, Dec 4","Fri, Dec 5",1,2,No,Designer,,,,,,
+Paid Media Development,FALSE,Release Paid Assets to Kepler,"Mon, Dec 8","Fri, Dec 12",4,5,Yes,Joe L or Julio,,,,,,
+Paid Media Development,FALSE,Launch,"Mon, Dec 15","Mon, Dec 15",0,1,No,"Proofreader, Designer, Compliance",,,,,,
+,Email Development,,,,,,Yes,QA,,,,,,
+Email Development,FALSE,Creative Production,"Mon, Nov 24","Tue, Dec 2",4,5,Yes,Joe L,,,,,,
+Email Development,FALSE,Send Emails to Development,"Wed, Dec 3","Fri, Dec 5",2,3,Yes,Joe L,,,,,,
+Email Development,FALSE,Development | Design QC,"Mon, Dec 8","Mon, Dec 8",0,1,,,,,,,,
+Email Development,FALSE,Development | Proofreading,"Mon, Dec 8","Mon, Dec 8",0,1,No,Designer,,,,,,
+Email Development,FALSE,Development | Compliance Review,"Mon, Dec 8","Mon, Dec 8",0,1,Yes,QA,,,,,,
+Email Development,FALSE,Build Responsys Workbooks,"Tue, Dec 9","Tue, Dec 9",0,1,Yes,PM,,,,,,
+Email Development,FALSE,"Add ""View in Browser"" Links to Source Doc","Wed, Dec 10","Wed, Dec 10",0,1,Yes,Paid Media,,,,,,
+Email Development,FALSE,Issue Proofs,"Wed, Dec 10","Wed, Dec 10",0,1,,,,,,,,
+Email Development,FALSE,QA Verification,"Thu, Dec 11","Thu, Dec 11",0,1,No,Designer,,,,,,
+Email Development,FALSE,Development | Stakeholder Review,"Fri, Dec 12","Fri, Dec 12",0,1,Yes,QA,,,,,,
+Email Development,FALSE,Final Segmentation Review,"Fri, Dec 12","Fri, Dec 12",0,1,No,PM,,,,,,
+Email Development,FALSE,Campaign Peer Review,"Fri, Dec 12","Fri, Dec 12",0,1,No,Proofreader,,,,,,
+Email Development,FALSE,Deploy Launch Email,"Mon, Dec 15","Mon, Dec 15",0,1,No,Compliance,,,,,,
