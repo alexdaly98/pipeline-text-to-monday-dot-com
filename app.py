@@ -22,30 +22,16 @@ def get_clients() -> tuple[WriterClient, MondayClient]:
     return writer_client, monday_client
 
 
-def normalize_list_of_objects(objs):
-    """Convert list of dataclass/objects/dicts into list of dicts for display."""
-    if not objs:
-        return []
-
-    if isinstance(objs[0], dict):
-        return objs
-
-    try:
-        from dataclasses import is_dataclass, asdict
-
-        if is_dataclass(objs[0]):
-            return [asdict(o) for o in objs]
-    except Exception:
-        pass
-
-    # Fallback: use __dict__
-    normalized = []
-    for o in objs:
-        if hasattr(o, "__dict__"):
-            normalized.append({k: v for k, v in o.__dict__.items() if not k.startswith("_")})
-        else:
-            normalized.append({"value": str(o)})
-    return normalized
+def get_attr(obj, *names, default=None):
+    """Safely get an attribute or dict key from obj, trying several names."""
+    for name in names:
+        # dataclass / object
+        if hasattr(obj, name):
+            return getattr(obj, name)
+        # dict-like
+        if isinstance(obj, dict) and name in obj:
+            return obj[name]
+    return default
 
 
 def extract_board_data_from_csv(writer_client: WriterClient, uploaded_file) -> BoardData:
@@ -76,6 +62,79 @@ def extract_board_data_from_text_input(writer_client: WriterClient, text_input: 
     return writer_client.extract_from_text(text_input)
 
 
+def render_timeline_preview(board_data: BoardData):
+    """
+    Show a user-friendly preview of the extracted timeline:
+    - Bullets for groups
+    - Under each, tasks with name + start/end dates
+    """
+    groups = getattr(board_data, "groups", []) or []
+    items = getattr(board_data, "items", []) or []
+
+    # Map group_key -> group_name
+    group_key_to_name: dict[str, str] = {}
+    for g in groups:
+        key = get_attr(g, "key", "group_key", "id", default=None)
+        name = get_attr(g, "name", "title", "label", default="Unnamed group")
+        if key is not None:
+            group_key_to_name[str(key)] = str(name)
+
+    # Map group_key -> list of item dicts
+    group_items: dict[str, list[dict]] = {k: [] for k in group_key_to_name}
+    ungrouped: list[dict] = []
+
+    for it in items:
+        gkey = get_attr(it, "group_key", "group", "group_id", default=None)
+        name = get_attr(it, "name", "title", default="Untitled task")
+        start = get_attr(it, "start_date", "from", "start", default="")
+        end = get_attr(it, "end_date", "to", "end", default="")
+
+        task = {
+            "name": str(name),
+            "start": str(start) if start else "",
+            "end": str(end) if end else "",
+        }
+
+        if gkey is not None and str(gkey) in group_items:
+            group_items[str(gkey)].append(task)
+        else:
+            ungrouped.append(task)
+
+    st.subheader("Detected timeline structure (from Writer AI)")
+
+    if not group_key_to_name and not ungrouped:
+        st.info("No timeline structure detected.")
+        return
+
+    # Render groups as bullets
+    for gkey, gname in group_key_to_name.items():
+        lines = [f"- **{gname}**"]
+        tasks = group_items.get(gkey, [])
+        if tasks:
+            for t in tasks:
+                if t["start"] or t["end"]:
+                    lines.append(
+                        f"  - {t['name']} — `{t['start']}` → `{t['end']}`"
+                    )
+                else:
+                    lines.append(f"  - {t['name']}")
+        else:
+            lines.append("  - _No tasks detected for this group._")
+
+        st.markdown("\n".join(lines))
+
+    # Ungrouped tasks, if any
+    if ungrouped:
+        st.markdown("\n**Ungrouped tasks**")
+        lines = []
+        for t in ungrouped:
+            if t["start"] or t["end"]:
+                lines.append(f"- {t['name']} — `{t['start']}` → `{t['end']}`")
+            else:
+                lines.append(f"- {t['name']}")
+        st.markdown("\n".join(lines))
+
+
 def main():
     st.set_page_config(
         page_title="Text → Monday.com Timeline (Powered by Writer AI)",
@@ -85,7 +144,7 @@ def main():
     st.title("Text → Timeline in Monday.com")
     st.markdown(
         "Turn **plain English project plans** into a structured **timeline board in Monday.com**.\n\n"
-        "**Powered by _Writer AI_ for structured timeline extraction.** 💡"
+        "This app is **_powered by Writer AI_** for smart, structured timeline extraction. ✨"
     )
 
     st.markdown("---")
@@ -166,21 +225,8 @@ def main():
 
         st.success("Phase 1 complete – Writer AI successfully extracted the timeline ✅")
 
-        # Show extracted groups & items (visible now, and will stay visible during Phase 2)
-        groups = normalize_list_of_objects(getattr(board_data, "groups", []))
-        items = normalize_list_of_objects(getattr(board_data, "items", []))
-
-        st.subheader("Detected groups (from Writer AI)")
-        if groups:
-            st.dataframe(groups, use_container_width=True)
-        else:
-            st.info("No groups detected.")
-
-        st.subheader("Detected items (from Writer AI)")
-        if items:
-            st.dataframe(items, use_container_width=True)
-        else:
-            st.info("No items detected.")
+        # Show a concise, user-friendly preview (and keep it visible during Phase 2)
+        render_timeline_preview(board_data)
 
         st.markdown("---")
 
@@ -189,7 +235,7 @@ def main():
         # -------------------------
         with st.spinner(
             "Phase 2 – Creating your Monday.com board and pushing timeline items...\n"
-            "(You can already review the extracted data above while this runs.)"
+            "(You can still review the extracted structure above while this runs.)"
         ):
             try:
                 board_id, group_ids = monday_client.create_board_from_data(
@@ -205,14 +251,9 @@ def main():
         # Board info + link
         st.markdown(f"**Board ID:** `{board_id}`")
 
-        # Generic board URL pattern (user may need to select account if they have multiple)
-        board_url = f"https://app.monday.com/boards/{board_id}"
+        # Your specific board URL pattern
+        board_url = f"https://writer698722.monday.com/boards/{board_id}"
         st.markdown(f"[Open the board in Monday.com]({board_url})")
-
-        # If you still want to expose group IDs mapping (but not raw logs)
-        if group_ids:
-            with st.expander("Show group mapping (group_key → Monday group ID)"):
-                st.json(group_ids)
 
 
 if __name__ == "__main__":
